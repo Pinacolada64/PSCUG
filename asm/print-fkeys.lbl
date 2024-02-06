@@ -1,0 +1,106 @@
+{:10}
+    sys {sym:ml}
+{asm}
+; read function keys from keyboard matrix
+
+key_matrix		= $c5 ; c64 keyboard matrix value
+NO_KEY_PRESSED		= 64
+
+print_string	= $ab1e
+check_stop_key	= $ffe1	; .z set if stop hit
+
+ml:
+; display instructions:
+	lda #<instructions	;  low byte of instructions string
+	ldy #>instructions	; high byte of instructions string
+	jsr print_string	; print string
+
+main_loop:
+	lda key_matrix
+	cmp #NO_KEY_PRESSED
+	beq stop_key
+
+; push key onto stack
+	pha
+; save shift key status:
+	lda 653
+	and #%00000001	; get shift status
+	sta shift_status
+
+; check if f1/f3/f5/f7 key pressed:
+; get key matrix value back:
+	pla
+	ldy #0
+fkey_decode_loop:
+	cmp fkey_matrix_values,y
+	beq fkey_update_msg
+	iny
+	cpy #$04
+	bne fkey_decode_loop
+; key not in table:
+	jmp main_loop
+
+fkey_update_msg:
+; reset 'f<x>' byte in message:
+	lda fkey_numbers,y
+	sta fkey_number
+
+; get saved shift status:
+	ldx shift_status
+	cpx #$01		; shift pressed?
+	bne print_fkey_string	; yes
+; otherwise, make message for f2/f4/f6/f8:
+	inc fkey_number		; 1->2, 3->4, 5->6, 7->8
+
+print_fkey_string:
+	lda #<fkey_message
+	ldy #>fkey_message
+	jsr print_string
+
+debounce:
+	lda key_matrix
+	cmp #NO_KEY_PRESSED
+	bne debounce
+
+stop_key:
+	jsr check_stop_key
+	bne main_loop
+	rts
+
+fkey_matrix_values:
+	byte 4	; f1
+	byte 5	; f3
+	byte 6	; f5
+	byte 3	; f7
+
+fkey_numbers:
+	byte '1' ; f1
+	byte '3' ; f3
+	byte '5' ; f5
+	byte '7' ; f7
+
+shift_status:
+	byte $ff	; save "shift key pressed" state
+
+fkey_message:
+	ascii 'f'
+fkey_number:
+	ascii '0'	; self-modifying
+	ascii " pressed"
+	byte $0d,$00
+
+instructions:
+	;      ----+----+----+----+----+----+----+----+
+	ascii "{clear}"
+	ascii "this program reads f1/f3/f5/f7 keys"
+	byte $0d
+	ascii "using the keyboard matrix scan codes."
+	byte $0d,$0d
+	ascii "the shift key is read independently to"
+	byte $0d
+	ascii "determine if f2/f4/f6/f8 are being hit."
+	byte $0d,$0d
+	ascii "the stop key returns to basic."
+	byte $0d
+	byte $00
+{endasm}

@@ -1,0 +1,191 @@
+= Introduction to 6502/6510 assembly language
+Ryan Sherwood <sym.rsherwood@gmail.com>
+v0.2, May 19, 2020: Alpha layout
+:toc:
+
+== Introduction
+
+I realize many other people have written introductory texts to assembly language before this, have their own web sites, and such. The purpose behind me writing another tutorial is twofold: to reinforce concepts I've learned by explaining them to others, and perhaps pad out my resume by proving I can actually finish something I start (admittedly something I have trouble with) -- even if it is incredibly niche in nature -- and use some interesting tools to do it.
+
+At the February 2020 PSCUGfootnote:[Puget Sound Commodore Users' Group: https://www.pscug.org] meeting, I suggested that I should write and explain the workings of a simple program in assembly language that printed `Hello World!` on the screen. (This is a convention, the origins of which are shrouded to me in the mists of time, whereby students of a given programming language often display this message as one of their first programming exercises.)
+
+Being ably aided and abetted by my friend Jessie, it became apparent that having the synonomous instructions in a higher level language -- namely, BASICfootnote:[Beginner's All-purpose Symbolic Instruction Code, a somewhat contrived acronym in this writer's opinion] -- alongside the lower level assembly language instructions would be adventageous.
+
+Perhaps an explanation of the differences between higher-level _vs_ lower-level is warranted.
+
+High-level languages, such as BASIC or FORTRANfootnote:[FORmula TRANslator, a rather verbose programming language], are comprised of commands easy for human beings to understand. Usually words or abbreviations are used for the convenience of the human programmer. This verbosity, while helpful to the human programmer, can be costly (as in time, not price) in terms of time spent by the computer _interpreting_ instructions written by the programmer. That is, the language looks at the next command, figures out what it is, then looks at whether it's being used correctly in the context of the previous command. If it isn't, a so-called _syntax error_ is issued, and the program usually stops at that point.
+
+.Syntax Error in BASIC
+====
+`10 primt"hello, world!"`
+
+when `RUN`, this code fragment outputs the error message:
+
+`?syntax  error in 10`
+
+because `primt` is a typo in the BASIC statement `print`.
+
+[NOTE]
+The author has _never_ encountered this error and has _no_ idea how it could ever happen.
+
+====
+
+With a lower-level language like assembly language, there isn't any protection like is offered in BASIC. Executing a wrong instruction can produce wrong results, or crash the computer entirely.
+
+## Tools We Need
+
+1. Patience
+2. ML monitor
+3. C64List
+4. A thing
+5. Lorem ipsum
+
+## Decimal and Hexadecimal
+As an example, you've probably seen utilities that use `sys 49152` to start them. In decimal, that looks like a fairly arbitrary number, but in hexadecimal it's a nice round number: `$c000` (pronounced, if you want to say it out loud, as "c thousand"). Remember, in hex, `$c` is 12, multiplied by 16. So, how to convert from decimal to hexadecimal?
+
+## Hexadecimal vs Binary
+
+## Hexadecimal: Compact Binary
+
+## Large Numbers, or High and Low Bytes
+
+8-bit computers can store 0-255 in a single memory location. If you want to store bigger numbers or make use of higher addresses than 255, you split that larger number into two parts, storing the two parts in two addresses, "chaining" them together.
+
+Here's how to do that. 
+
+1. Take 49152, divide it by 256. FIXME
+(This is called the _high byte_ of the two.)
+2. Add the second number (called the _low byte_ of the two).
+
+In this way, you can now refer to values or addresses up to 256x256, which works out to 65,536 -- coincidentally, the maximum number of bytes addressable by a 6502 microprocessor.
+
+So a code snippet to perform the math in BASIC...
+
+.Conversion To High- and Low-Byte Values
+```
+10 hi=192:lo=0:print hi*256+lo
+20 v=49152:hi=int(v/256):lo=hi and 256:print hi,lo:print hi*256+lo
+run
+ 49152
+ 192       0
+ 49152
+```
+
+A single memory location can only hold a value from 0-255.
+A value larger than 255 needs to occupy two memory locations.
+Larger value from 0-65535, you take the first number, multiply it by 256 and add the 2nd number. This program shows you how to convert a number into "`low`" and "`high`" bytes, displays the number, and tinkers with those pointers by changing the first BASIC line number to _x_, where _x_ can be from 0-63999.
+
+.Altering BASIC Line Number Pointers
+```
+10 x=20:hi=int(x/256):lo=int(x and 255)
+20 print hi*256+lo:poke 2051,lo:poke 2052,hi
+```
+
+## Addressing Modes
+
+Load the contents of memory locations `$fc` and `$fb` into the `.a` register, then add the contents of the `.y` register.
+This forms your effective address.
+
+.Indirect Indexed Addressing
+[code,6502]
+====
+
+*m fb fc*
+00 03
+
+**r**
+
+  ADDR A  X  Y  SP 00 01 NV-BDIZC LIN CYC  STOPWATCH
+.;e5cd 00 00 0a f3 2f 37 00100010 012 002  832544377
+
+[NOTE]
+Fix this.
+====
+
+.Code
+====
+[%autowidth]
+[%header]
+|====================
+| Opcode | Purpose
+| `lda ($fb),y` | thing 
+| `lda ($fb),y` | thing 
+|====================
+
+[width="100%",options="header"]
+|====================
+| Assembly code | BASIC | Purpose 
+| `ldx #$00`    | `x=0` | Initialize the character counter.
+| `lda #034b,x` | `a=peek(848+x)`| Form an effective address from $034b plus whatever is in register .x.  Get the byte from the text table starting at that address.
+| fixme         | fixme  | fixme
+|====================
+
+====
+
+## The Whole Listing
+
+```
+.C:033c  A2 00       LDX #$00     ; initialize our counter to 0
+.C:033e  BD 4B 03    LDA $034B,X  ; get a byte from $0348 + the contents of the .x register, and load it in .a
+.C:0341  F0 07       BEQ $034A    ; if the contents of the .x register is zero, branch to $034a
+.C:0343  20 D2 FF    JSR $FFD2    ; print the character in .a
+.C:0346  E8          INX          ; increment our counter to get the next character in the string
+.C:0347  4C 3E 03    JMP $033E    ; go back to get another character
+.C:034a  60          RTS          ; return to BASIC
+.C:034b  48          PHA
+.C:034c  45 4C       EOR $4C
+.C:034e  4C 4F 00    JMP $004F
+.C:0351  00          BRK
+.C:0352  00          BRK
+```
+
+```
+(C:$0353) i 034b
+>C:034b hello, world!@@@@@@@@@@@@@@@@@@@@@@@@@@@
+>C:0373 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+>C:039b @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+>C:03c3 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+(C:$03eb) 
+```
+
+## Writing Our Message
+```
+> 034a 48 45 4c 4c 4f 00
+```
+
+## Reading Our Message
+```
+(C:$03fb) i 034a
+>C:034a hello@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+```
+
+## Self-Modifying Code
+
+The 6502 processor doesn't have an instruction like `lda ($fb,y),x` -- in other words, "form an effective address out of `$fc/$fb plus .y`, then add the contents of `.x` to that."
+However, we can do something very similar by modifying the effective address in the code itself _as it runs_.
+
+```
+> lda ($fb),y / sty addr+1 / iny / lda ($fb),y / sta addr+2 / addr: lda $ffff,x
+```
+
+
+.Self-Modifying Code
+[%autowidth]
+[%header]
+|====================
+| Label      | Instruction      | Purpose 
+| `setup`    | `ldy #$00`       | Start our `.y` counter off at value `$00`
+|            | `lda ($fb),y`    | Get the address from `$fb/$fc`
+|            | `sta mod_addr+2` | Modify the low byte of the `sta` operand
+|            | `???`            | Finish this
+| `mod_addr` | `sta $ffff`      | `$ffff` gets modified as we run through the loop
+|====================
+
+## Trivia
+
+Something I discovered while writing this is that Donald Knuth, a computer science professor and author of the multi-volume series _The Art of Computer Programming_, had designed a hypothetical computer called MIX in the 1960s.
+The device number for disk drives started at 8--the same as the Commodore 64's--and the instruction set it used include `LDA`, `STA`, `LDX`, `STX`, and several others that we've seen in the 6502 instruction set.
+I think that's pretty neat.
+We learn from the past, for sure.
+
+If you'd like to read about MIX, you can do so here: https://en.wikipedia.org/wiki/MIX
