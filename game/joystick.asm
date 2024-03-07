@@ -146,8 +146,9 @@ sub_x_y_to_screen_ram:
 	sta temp
 	lda PLAYER_SCREEN_RAM_LOC+1	; hi byte
 	sta temp+1
-; next, add the x offset (rows):
-	ldx player_x
+; next, get the y offset (rows) to act as counter:
+	ldy player_y
+; is adding row needed?
 	beq add_cols
 add_rows:
 ; clear carry before addition
@@ -161,15 +162,16 @@ add_rows:
 	adc #00
 	sta temp+1
 next_row:
-	dex
+	dey
 	bne add_rows
 add_cols:
-	lda player_y
+; is adding column needed?
+	lda player_x
 	beq transfer
-	clc
 ; add to lsb
+	clc
 	lda temp
-	adc #player_y
+	adc player_x
 	sta temp
 ; add to msb
 	lda temp+1
