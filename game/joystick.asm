@@ -136,12 +136,13 @@ no_move:
 
 sub_x_y_to_screen_ram:
 ; convert player_x and player_y coordinates to a screen memory location
+; https://www.lemon64.com/forum/viewtopic.php?t=62350&start=15
 
 ; enter with:	player_x = x coordinate
 ;		player_y = y coordinate
 ; returns:	(PLAYER_SCREEN_RAM_LOC): player location in screen RAM
 
-; first, copy current screen ram location to temp:
+; first, copy current screen ram location to temp storage:
 	lda PLAYER_SCREEN_RAM_LOC	; lo byte
 	sta temp
 	lda PLAYER_SCREEN_RAM_LOC+1	; hi byte
@@ -155,15 +156,16 @@ add_rows:
 	clc
 ; add to lsb
 	lda temp
-	adc #40
+	adc row_offsets_lo,y
 	sta temp
 ; add to msb
 	lda temp+1
-	adc #00
+;	adc #00
+	adc row_offsets_hi,y
 	sta temp+1
-next_row:
-	dey
-	bne add_rows
+;next_row:
+;	dey
+;	bne add_rows
 add_cols:
 ; is adding column needed?
 	lda player_x
@@ -193,7 +195,7 @@ sub_plot_player:
 	ldy #$00
 	lda (PLAYER_SCREEN_RAM_LOC),y
 ; invert bit 7 to reverse char
-	eor %10000000
+	eor %11111111
 	sta (PLAYER_SCREEN_RAM_LOC),y
 	rts
 
@@ -207,6 +209,17 @@ player_x:
 	byte $ff
 player_y:
 	byte $ff
+
+row_offsets_lo:
+	; rows 0-12
+	byte <0,<40,<80,<120,<160,<200,<240,<280,<320,<360,<400,<440,<480
+	; rows 13-25
+	byte <520,<560,<600,<640,<680,<720,<760,<800,<840,<880,<920,<960,<1000
+row_offsets_hi:
+	; rows 0-12
+	byte >0,>40,>80,>120,>160,>200,>240,>280,>320,>360,>400,>440,>480
+	; rows 13-25
+	byte >520,>560,>600,>640,>680,>720,>760,>800,>840,>880,>920,>960,>1000
 
 joy2_state:
 ; save joystick state
