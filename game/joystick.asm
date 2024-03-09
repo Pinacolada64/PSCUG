@@ -16,6 +16,8 @@ end_of_line:
 ; 2059-2060 end of program:
 	word $0000
 
+
+chrout	= $ffd2
 check_stop_key	= $ffe1	; .z=1 if stop hit
 
 ; https://codebase64.org/doku.php?id=base:joystick_input_handling
@@ -45,23 +47,50 @@ setup:
 	ldx #12 ; 24 / 2
 	sty player_y
 	jsr sub_x_y_to_screen_ram
-;	jsr sub_plot_player
 
 read_joy2:
 ; we read port 2 since port 1 is scanned using the cia chip and (unless
 ; interrupts are disabled) will scan the keyboard too, which interferes
 ; with scanning port 1.
+; code from: https://codebase64.org/doku.php?id=base:joystick_input_handling
 	lda $dc00
-	sta joy2_state
-;	lda JOYSTICK_UP	; if you want to test code
+; get direction bits,
+; start counting how many frames the joystick has been held
 	lsr
-	beq go_up
+	ror joy2_up
 	lsr
-	beq go_down
+	ror joy2_down
 	lsr
-	beq go_left
+	ror joy2_left
 	lsr
-	beq go_right
+	ror joy2_right
+	lsr
+	ror joy2_fire
+check_up:
+	bit joy2_up
+	bmi check_down		; if not moved up at all
+	bvc check_down	; or already up during last joystick read
+	jsr go_up
+check_down:
+	bit joy2_down
+	bmi check_left
+	bvc check_left
+	jsr go_down
+check_left:
+	bit joy2_left
+	bmi check_right
+	bvc check_right
+	jsr go_left
+check_right:
+	bit joy2_right
+	bmi check_fire
+	bvc check_fire
+	jsr go_right
+check_fire:
+	bit joy2_fire
+	bmi read_stop
+	bvc no_move
+	jsr go_fire
 
 read_stop:
 	jsr check_stop_key
@@ -93,7 +122,7 @@ go_up:
 
 go_down:
 	lda player_y
-	cmp #25
+	cmp #24
 	beq no_move
 	jsr sub_plot_player
 	; add lo byte
@@ -143,6 +172,9 @@ go_right:
 	sta PLAYER_SCREEN_RAM_LOC+1
 	jsr sub_plot_player
 	jmp no_move
+
+go_fire:
+	rts
 
 no_move:
 ; can't move due to obstacle, or moving will take player out of screen boundaries
@@ -202,9 +234,14 @@ transfer:
 ; falls through:
 
 sub_plot_player:
+	lda debug
+	beq sub_plot_player1
+	lda '{home}'
+	jsr chrout
 	lda PLAYER_SCREEN_RAM_LOC+1
 	ldx PLAYER_SCREEN_RAM_LOC
 	jsr $bdcd
+sub_plot_player1:
 ; .y=0: no index needed
 	ldy #$00
 	lda (PLAYER_SCREEN_RAM_LOC),y
@@ -215,6 +252,17 @@ sub_plot_player:
 
 temp:
 	word $ffff
+
+joy2_up:
+	byte $00
+joy2_down:
+	byte $00
+joy2_left:
+	byte $00
+joy2_right:
+	byte $00
+joy2_fire:
+	byte $00
 
 ; player coordinates:
 ; it may be overkill to keep track of this, but maybe it's better to have it
@@ -238,6 +286,9 @@ row_offsets_hi:
 joy2_state:
 ; save joystick state
 	byte $ff
+
+debug:
+	byte $00
 
 movement_deltas:
 ; these are values to add to the player's position
