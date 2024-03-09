@@ -71,7 +71,7 @@ basic:
 	rts
 
 go_up:
-	lda player_x
+	lda player_y
 ; TODO: check for non-walkable chars (>128)
 ;	cmp #0
 	beq no_move
@@ -86,13 +86,13 @@ go_up:
 	lda PLAYER_SCREEN_RAM_LOC+1
 	sbc #>40
 	sta PLAYER_SCREEN_RAM_LOC+1
-; update player x coordinate
-	dec player_x
+; update player y coordinate
+	dec player_y
 	jsr sub_plot_player
 	jmp no_move
 
 go_down:
-	lda player_x
+	lda player_y
 	cmp #25
 	beq no_move
 	jsr sub_plot_player
@@ -105,28 +105,42 @@ go_down:
 	lda PLAYER_SCREEN_RAM_LOC+1
 	adc #>40
 	sta PLAYER_SCREEN_RAM_LOC+1
-; update player x coordinate
-	inc player_x
+; update player y coordinate
+	inc player_y
 	jsr sub_plot_player
 	jmp no_move
 
 go_left:
 	; Check for left boundary
-	lda player_y
+	lda player_x
 ;	cmp #0
 	beq no_move
-	jsr sub_plot_player
 	dec player_x
+	jsr sub_plot_player
+	sec
+	lda PLAYER_SCREEN_RAM_LOC
+	sbc #1
+	sta PLAYER_SCREEN_RAM_LOC
+	lda PLAYER_SCREEN_RAM_LOC+1
+	sbc #$00
+	sta PLAYER_SCREEN_RAM_LOC+1
 	jsr sub_plot_player
 	jmp no_move
 
 go_right:
 	; Check for right boundary
-	lda player_y
+	lda player_x
 	cmp #39
 	beq no_move
+	inc player_x
 	jsr sub_plot_player
-	inc player_y
+	clc
+	lda PLAYER_SCREEN_RAM_LOC
+	adc #1
+	sta PLAYER_SCREEN_RAM_LOC
+	lda PLAYER_SCREEN_RAM_LOC+1
+	adc #$00
+	sta PLAYER_SCREEN_RAM_LOC+1
 	jsr sub_plot_player
 	jmp no_move
 
@@ -195,7 +209,7 @@ sub_plot_player:
 	ldy #$00
 	lda (PLAYER_SCREEN_RAM_LOC),y
 ; invert bit 7 to reverse char
-	eor %11111111
+	eor #%10000000
 	sta (PLAYER_SCREEN_RAM_LOC),y
 	rts
 
