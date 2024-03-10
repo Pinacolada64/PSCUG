@@ -16,7 +16,7 @@ end_of_line:
 ; 2059-2060 end of program:
 	word $0000
 
-
+strout	= $ab1e
 chrout	= $ffd2
 check_stop_key	= $ffe1	; .z=1 if stop hit
 
@@ -47,6 +47,11 @@ setup:
 	ldx #12 ; 24 / 2
 	sty player_y
 	jsr sub_x_y_to_screen_ram
+
+; display instructions:
+	lda #<instructions	;  low byte of instructions string
+	ldy #>instructions	; high byte of instructions string
+	jsr strout
 
 read_joy2:
 ; we read port 2 since port 1 is scanned using the cia chip and (unless
@@ -286,6 +291,13 @@ row_offsets_hi:
 joy2_state:
 ; save joystick state
 	byte $ff
+
+instructions:
+	;      ----+----+----+----+----+----+----+----+
+	ascii "move square with joystick in port 2."
+	byte $0d
+	ascii "stop key exits to basic."
+	byte $0d,$00
 
 debug:
 	byte $00
