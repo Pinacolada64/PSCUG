@@ -1,0 +1,13 @@
+{tokenizer:$cc=rgr; $cd=rclr; $cf=joy}
+
+{tokenizer:$d0=rdot; $d1=dec; $d2=hex$; $d3=err$; $d4=instr; $d5=else; $d6=resume; $d7=trap}
+
+{tokenizer:$d8=tron; $d9=troff; $da=sound; $db=vol; $dc=auto; $dd=pudef; $de=graphic; $df=paint}
+
+{tokenizer:$e0=char; $e1=box; $e2=circle; $e3=gshape; $e4=sshape; $e5=draw; $e6=locate; $e7=color}
+
+{tokenizer:$e8=scnclr; $e9=scale; $ea=help; $eb=do; $ec=loop; $ed=exit; $ee=directory; $ef=dsave}
+
+{tokenizer:$f0=dload; $f1=header; $f2=scratch; $f3=collect; $f4=copy; $f5=rename; $f6=backup; $f7=delete}
+
+{tokenizer:$f8=renumber; $f9=key; $fa=monitor; $fb=using; $fc=until; $fd=while}
