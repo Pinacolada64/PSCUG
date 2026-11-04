@@ -41,17 +41,22 @@ setup:
 	lda #<$0400
 	sta PLAYER_SCREEN_RAM_LOC
 
-; put player in center of screen & make visible
-	ldy #20 ; 40 / 2
-	stx player_x
-	ldx #12 ; 24 / 2
-	sty player_y
-	jsr sub_x_y_to_screen_ram
+; clear the screen first: printing the instructions at the bottom
+; of the screen would scroll it, and the player's square with it
+	lda #147	; clear screen
+	jsr chrout
 
 ; display instructions:
 	lda #<instructions	;  low byte of instructions string
 	ldy #>instructions	; high byte of instructions string
 	jsr strout
+
+; put player in center of screen & make visible
+	ldx #20 ; 40 / 2
+	stx player_x
+	ldy #12 ; 24 / 2
+	sty player_y
+	jsr sub_x_y_to_screen_ram
 
 read_joy2:
 ; we read port 2 since port 1 is scanned using the cia chip and (unless
@@ -94,7 +99,7 @@ check_right:
 check_fire:
 	bit joy2_fire
 	bmi read_stop
-	bvc no_move
+	bvc read_stop
 	jsr go_fire
 
 read_stop:
@@ -108,7 +113,7 @@ go_up:
 	lda player_y
 ; TODO: check for non-walkable chars (>128)
 ;	cmp #0
-	beq no_move
+	beq go_done	; at the edge: don't move
 	jsr sub_plot_player
 ; adjust screen memory location
 	sec
@@ -123,12 +128,12 @@ go_up:
 ; update player y coordinate
 	dec player_y
 	jsr sub_plot_player
-	jmp no_move
+	rts
 
 go_down:
 	lda player_y
 	cmp #24
-	beq no_move
+	beq go_done	; at the edge: don't move
 	jsr sub_plot_player
 	; add lo byte
 	clc
@@ -142,13 +147,13 @@ go_down:
 ; update player y coordinate
 	inc player_y
 	jsr sub_plot_player
-	jmp no_move
+	rts
 
 go_left:
 	; Check for left boundary
 	lda player_x
 ;	cmp #0
-	beq no_move
+	beq go_done	; at the edge: don't move
 	dec player_x
 	jsr sub_plot_player
 	sec
@@ -159,13 +164,13 @@ go_left:
 	sbc #$00
 	sta PLAYER_SCREEN_RAM_LOC+1
 	jsr sub_plot_player
-	jmp no_move
+	rts
 
 go_right:
 	; Check for right boundary
 	lda player_x
 	cmp #39
-	beq no_move
+	beq go_done	; at the edge: don't move
 	inc player_x
 	jsr sub_plot_player
 	clc
@@ -176,14 +181,14 @@ go_right:
 	adc #$00
 	sta PLAYER_SCREEN_RAM_LOC+1
 	jsr sub_plot_player
-	jmp no_move
-
-go_fire:
 	rts
 
-no_move:
-; can't move due to obstacle, or moving will take player out of screen boundaries
-	jmp read_joy2
+go_fire:
+go_done:
+; the go_ routines are called with jsr, so they must return with rts.
+; (they used to jmp back to the main loop, which left 2 bytes on the
+; stack for every move until the stack overflowed.)
+	rts
 
 sub_x_y_to_screen_ram:
 ; convert player_x and player_y coordinates to a screen memory location
@@ -241,7 +246,7 @@ transfer:
 sub_plot_player:
 	lda debug
 	beq sub_plot_player1
-	lda '{home}'
+	lda #19	; cursor home
 	jsr chrout
 	lda PLAYER_SCREEN_RAM_LOC+1
 	ldx PLAYER_SCREEN_RAM_LOC
