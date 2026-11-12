@@ -44,6 +44,7 @@
 ;
 ; * STATION64 manual (sta64.txt, by DJ Indikator): which MIDI interfaces
 ;   matter on the C64, and the configurable hard-restart idea.
+;   https://ultradaw.com/station64/
 ;==============================================================================
 
 ;------------------------------------------------------------------------------

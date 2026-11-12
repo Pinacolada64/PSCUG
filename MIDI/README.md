@@ -71,3 +71,7 @@ listed (doubled parts) are dropped, priority 0 is kept first when more than
 The sources the program relies on (C64List, VICE, the KERNAL, SID and ACIA
 documentation, the MIDI specifications and C64 programming techniques) are
 credited in the comment block at the top of the assembly in `midi.bas`.
+
+Thanks also to [STATION64](https://ultradaw.com/station64/) by DJ Indikator,
+a C64 MIDI synth whose manual pointed the way on MIDI interfaces and the SID
+hard restart.
