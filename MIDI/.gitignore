@@ -1,0 +1,11 @@
+# build outputs (make regenerates them; midi.prg is kept in the repo)
+*.lst
+*.sym
+midi-vice-labels
+monitor-commands
+__pycache__/
+# recordings
+*.avi
+*.mp4
+# reduction of a copyrighted song: kept local, recreate with reduce6.py (see README)
+penny-lane-6voice.mid
