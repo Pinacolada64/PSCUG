@@ -36,6 +36,12 @@ vice: $(TARGET).prg monitor-commands
 	$(LAUNCH_VICE) -midi -miditype $(MIDI_TYPE) $(SID2_FLAGS) \
 	    -moncommands monitor-commands -autostart $(TARGET).prg
 
+# Record a demo video (song, keyboards, monitor, instruments) -> midi-demo-*.mp4
+#   make demo            or   make demo SONG=jesu-joy-6voice.mid
+SONG = two-chips-in-c.mid
+demo: $(TARGET).prg monitor-commands
+	VICE_CMD="$(LAUNCH_VICE) -midi -miditype $(MIDI_TYPE) $(SID2_FLAGS)" ./demo.sh $(SONG)
+
 # Connect a virtual keyboard to VICE (run while both are open):
 #   vmpk -> Edit/MIDI Connections -> output "VICE:MIDI in/out"
 # or from a shell:  aconnect "MIDI Out" VICE   (VMPK's ALSA client name)
@@ -45,4 +51,4 @@ clean:
 	rm -f $(TARGET).prg $(TARGET).sym $(TARGET).lst \
 	      $(TARGET)-vice-labels monitor-commands
 
-.PHONY: all vice clean check
+.PHONY: all vice clean check demo

@@ -10,6 +10,7 @@ velocity, drums on channel 10 and a MIDI monitor.
 |---|---|
 | `make` | Builds `midi.prg` with C64List 4.06, makes VICE labels, and runs `check-branches.py` |
 | `make vice` | Runs it in VICE 3.10 with a MIDI cartridge and a second SID at `$D420` (`make vice SID2_ADDR=` for mono) |
+| `make demo` | Records a demo video (`midi-demo-*.mp4`): plays a song and shows the keyboards, monitor, instruments and labels (`make demo SONG=jesu-joy-6voice.mid` for another song) |
 
 Keys: **F1** MIDI interface, **1–8** instrument, **CTRL-K** upper keyboard,
 **CTRL-I** MIDI monitor, **CTRL-L** note labels, **RUN/STOP** exit.
@@ -23,6 +24,7 @@ Keys: **F1** MIDI interface, **1–8** instrument, **CTRL-K** upper keyboard,
 | `midiscan.py` | Prints a MIDI file's tracks, channels, programs, note ranges and polyphony |
 | `reduce6.py` | Reduces a multi-part MIDI file to 6 simultaneous notes for the player |
 | `fix-vice-avi.sh` | Repairs the sound in VICE 3.10 ZMBV/AVI recordings |
+| `demo.sh` | The demo recorder behind `make demo` (needs ffmpeg, xdotool, aplaymidi, pactl; keep the VICE window visible) |
 | `*.mid` | Test songs (below) |
 | `midi.prg` | Prebuilt program, for running without C64List: `LOAD"MIDI",8` then `RUN` |
 

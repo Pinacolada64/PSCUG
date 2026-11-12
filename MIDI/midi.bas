@@ -322,7 +322,7 @@ main_loop:
     bcc >@NotNum
     cmp #$39
     bcs >@NotNum
-    sbc #$30-1              ; carry is clear here: A - $31 -> 0..7
+    sbc #$30                ; carry is clear, so SBC takes one more: A - $31 -> 0..7
     jsr set_all_patches
     jmp main_loop
 @NotNum:
